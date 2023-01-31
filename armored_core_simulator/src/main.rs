@@ -13,6 +13,7 @@ use rand::random;
 #[derive(Component)]
 struct Pilot {
     name: String,
+    wins: i32,
 }
 
 // Affects the movement of the AC, in kilos
@@ -58,12 +59,12 @@ struct Weapon {
 #[derive(Resource, Default)]
 struct GameState {
     current_round: i32,
-    winning_pilot: Option<String>,
+    surviving_pilot: Option<String>,
 }
 
 #[derive(Resource)]
 struct GameRules {
-    max_rounds: i32,
+    max_wins: i32,
 }
 
 fn new_round_system(game_rules: Res<GameRules>, mut game_state: ResMut<GameState>) {
@@ -71,8 +72,62 @@ fn new_round_system(game_rules: Res<GameRules>, mut game_state: ResMut<GameState
     println!("Begin round {}", game_state.current_round)
 }
 
-// Need to calculate the stats of an AC
+fn score_check_system(
+    game_rules: Res<GameRules>,
+    mut game_state: ResMut<GameState>,
+    query: Query<&Pilot>,
+) {
+    for pilot in &query {
+        if pilot.wins == game_rules.max_wins {
+            game_state.surviving_pilot = Some(pilot.name.clone());
+        }
+    }
+}
+
+fn simulation_over_system(
+    game_rules: Res<GameRules>,
+    game_state: Res<GameState>,
+    mut app_exit_events: EventWriter<AppExit>,
+) {
+    if let Some(ref pilot) = game_state.surviving_pilot {
+        println!("{pilot} survived.");
+        app_exit_events.send(AppExit);
+    }
+}
+
+fn startup_system(mut commands: Commands, mut game_state: ResMut<GameState>) {
+    commands.insert_resource(GameRules { max_wins: 2 });
+
+    commands.spawn_batch(vec![
+        (Pilot {
+            name: "Blue Rain".to_string(),
+            wins: 0,
+        }),
+        (Pilot {
+            name: "Ninebreaker".to_string(),
+            wins: 0,
+        }),
+    ]);
+}
+
+fn round_summary_system(query: Query<&Pilot>) {
+    for pilot in &query {
+        println!("Pilot {} with {} wins", pilot.name, pilot.wins);
+    }
+}
+
+fn spawn_ac_one() {}
+
+fn spawn_ac_two() {}
 
 fn main() {
-    App::new().run();
+    App::new()
+        .init_resource::<GameState>()
+        .add_startup_system(startup_system)
+        .add_plugin(ScheduleRunnerPlugin::default())
+        .add_system(new_round_system)
+        .add_system(score_check_system)
+        .add_system(round_summary_system)
+        .add_system(simulation_over_system)
+        .run();
 }
