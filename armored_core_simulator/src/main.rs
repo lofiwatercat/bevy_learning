@@ -116,7 +116,14 @@ fn round_summary_system(query: Query<&Pilot>) {
     }
 }
 
-fn spawn_ac_one() {}
+// We have pilot entities, and they will have their own AC.
+// Each pilot entity will have multiple children entities which will
+// consist of the parts of an AC, such as the head, core, arms, legs, and weapon
+fn spawn_ac_one(query: Query<&Pilot>) {
+    for pilot in &query {
+        if pilot.name == "Blue Rain" {}
+    }
+}
 
 fn spawn_ac_two() {}
 
@@ -126,6 +133,7 @@ fn main() {
         .add_startup_system(startup_system)
         .add_plugin(ScheduleRunnerPlugin::default())
         .add_system(new_round_system)
+        .add_system(spawn_ac_one)
         .add_system(score_check_system)
         .add_system(round_summary_system)
         .add_system(simulation_over_system)
