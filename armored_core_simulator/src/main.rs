@@ -119,9 +119,43 @@ fn round_summary_system(query: Query<&Pilot>) {
 // We have pilot entities, and they will have their own AC.
 // Each pilot entity will have multiple children entities which will
 // consist of the parts of an AC, such as the head, core, arms, legs, and weapon
-fn spawn_ac_one(query: Query<&Pilot>) {
-    for pilot in &query {
-        if pilot.name == "Blue Rain" {}
+fn spawn_ac_one(mut commands: Commands, query: Query<(Entity, &Pilot)>) {
+    for (e, pilot) in query.iter() {
+        if pilot.name == "Blue Rain" {
+            let core = commands
+                .spawn((Armor { value: 3000 }, Weight { value: 1000 }))
+                .id();
+            let head = commands
+                .spawn((
+                    Armor { value: 500 },
+                    Weight { value: 500 },
+                    Accuracy { value: 1000 },
+                ))
+                .id();
+            let arms = commands
+                .spawn((Armor { value: 1000 }, Weight { value: 1000 }))
+                .id();
+            let legs = commands
+                .spawn((
+                    Armor { value: 1500 },
+                    Weight { value: 1500 },
+                    Speed { value: 4500 },
+                ))
+                .id();
+            let weapon = commands
+                .spawn((
+                    Weapon {
+                        damage: Damage { value: 100 },
+                        firerate: Firerate { value: 100 },
+                        accuracy: Accuracy { value: 1000 },
+                    },
+                    Weight { value: 1000 },
+                ))
+                .id();
+            commands
+                .entity(e)
+                .push_children(&[core, head, arms, legs, weapon]);
+        };
     }
 }
 
