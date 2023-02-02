@@ -113,16 +113,18 @@ fn startup_system(mut commands: Commands, mut game_state: ResMut<GameState>) {
 // Prints the stats of each AC
 fn round_summary_system(
     pilot_query: Query<(&Pilot, &Children)>,
-    body_part_query: Query<(&Armor, &Weight, &Speed)>,
+    armor_query: Query<(&Armor)>,
+    weight_query: Query<(&Weight)>,
+    speed_query: Query<(&Speed)>,
 ) {
     for (pilot, children) in pilot_query.iter() {
         println!("Pilot {} with {} wins", pilot.name, pilot.wins);
 
         let mut armor: i32 = 0;
         for &body_part in children {
-            let part_result = body_part_query.get(body_part);
+            let part_result = armor_query.get(body_part);
             if let Ok(part) = part_result {
-                armor += part.0.value;
+                armor += part.value;
             }
         }
         println!("Armor: {}", armor);
