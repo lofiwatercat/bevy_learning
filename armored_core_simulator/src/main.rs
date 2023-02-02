@@ -110,16 +110,29 @@ fn startup_system(mut commands: Commands, mut game_state: ResMut<GameState>) {
     ]);
 }
 
-fn round_summary_system(query: Query<&Pilot>) {
-    for pilot in &query {
+// Prints the stats of each AC
+fn round_summary_system(
+    pilot_query: Query<(&Pilot, &Children)>,
+    body_part_query: Query<(&Armor, &Weight, &Speed)>,
+) {
+    for (pilot, children) in pilot_query.iter() {
         println!("Pilot {} with {} wins", pilot.name, pilot.wins);
+
+        let mut armor: i32 = 0;
+        for &body_part in children {
+            let part_result = body_part_query.get(body_part);
+            if let Ok(part) = part_result {
+                armor += part.0.value;
+            }
+        }
+        println!("Armor: {}", armor);
     }
 }
 
 // We have pilot entities, and they will have their own AC.
 // Each pilot entity will have multiple children entities which will
 // consist of the parts of an AC, such as the head, core, arms, legs, and weapon
-fn spawn_ac_one(mut commands: Commands, query: Query<(Entity, &Pilot)>) {
+fn spawn_ac_one(mut commands: Commands, query: Query<(Entity, &Pilot), (Without<Children>)>) {
     for (e, pilot) in query.iter() {
         if pilot.name == "Blue Rain" {
             let core = commands
@@ -159,7 +172,45 @@ fn spawn_ac_one(mut commands: Commands, query: Query<(Entity, &Pilot)>) {
     }
 }
 
-fn spawn_ac_two() {}
+fn spawn_ac_two(mut commands: Commands, query: Query<(Entity, &Pilot), (Without<Children>)>) {
+    for (e, pilot) in query.iter() {
+        if pilot.name == "Ninebreaker" {
+            let core = commands
+                .spawn((Armor { value: 5000 }, Weight { value: 5000 }))
+                .id();
+            let head = commands
+                .spawn((
+                    Armor { value: 700 },
+                    Weight { value: 700 },
+                    Accuracy { value: 500 },
+                ))
+                .id();
+            let arms = commands
+                .spawn((Armor { value: 2000 }, Weight { value: 2000 }))
+                .id();
+            let legs = commands
+                .spawn((
+                    Armor { value: 3500 },
+                    Weight { value: 3500 },
+                    Speed { value: 7500 },
+                ))
+                .id();
+            let weapon = commands
+                .spawn((
+                    Weapon {
+                        damage: Damage { value: 750 },
+                        firerate: Firerate { value: 17 },
+                        accuracy: Accuracy { value: 1000 },
+                    },
+                    Weight { value: 1000 },
+                ))
+                .id();
+            commands
+                .entity(e)
+                .push_children(&[core, head, arms, legs, weapon]);
+        };
+    }
+}
 
 fn main() {
     App::new()
@@ -168,6 +219,7 @@ fn main() {
         .add_plugin(ScheduleRunnerPlugin::default())
         .add_system(new_round_system)
         .add_system(spawn_ac_one)
+        .add_system(spawn_ac_two)
         .add_system(score_check_system)
         .add_system(round_summary_system)
         .add_system(simulation_over_system)
