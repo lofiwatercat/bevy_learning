@@ -121,13 +121,26 @@ fn round_summary_system(
         println!("Pilot {} with {} wins", pilot.name, pilot.wins);
 
         let mut armor: i32 = 0;
+        let mut weight: i32 = 0;
+        let mut speed: i32 = 0;
         for &body_part in children {
-            let part_result = armor_query.get(body_part);
-            if let Ok(part) = part_result {
+            let armor_result = armor_query.get(body_part);
+            let weight_result = weight_query.get(body_part);
+            let speed_result = speed_query.get(body_part);
+
+            if let Ok(part) = armor_result {
                 armor += part.value;
+            }
+            if let Ok(part) = weight_result {
+                weight += part.value;
+            }
+            if let Ok(part) = speed_result {
+                speed += part.value;
             }
         }
         println!("Armor: {}", armor);
+        println!("Weight: {}", weight);
+        println!("Speed: {}", speed);
     }
 }
 
