@@ -60,6 +60,7 @@ struct Weapon {
 struct GameState {
     current_round: i32,
     surviving_pilot: Option<String>,
+    round_over: bool,
 }
 
 #[derive(Resource)]
@@ -68,8 +69,10 @@ struct GameRules {
 }
 
 fn new_round_system(game_rules: Res<GameRules>, mut game_state: ResMut<GameState>) {
-    game_state.current_round += 1;
-    println!("Begin round {}", game_state.current_round)
+    if (game_state.round_over) {
+        game_state.current_round += 1;
+        println!("Begin round {}", game_state.current_round)
+    }
 }
 
 fn score_check_system(
@@ -97,6 +100,7 @@ fn simulation_over_system(
 
 fn startup_system(mut commands: Commands, mut game_state: ResMut<GameState>) {
     commands.insert_resource(GameRules { max_wins: 2 });
+    game_state.round_over = false;
 
     commands.spawn_batch(vec![
         (Pilot {
@@ -111,15 +115,15 @@ fn startup_system(mut commands: Commands, mut game_state: ResMut<GameState>) {
 }
 
 // Prints the stats of each AC
+// Also simulates combat
 fn round_summary_system(
     pilot_query: Query<(&Pilot, &Children)>,
     armor_query: Query<(&Armor)>,
     weight_query: Query<(&Weight)>,
     speed_query: Query<(&Speed)>,
+    mut game_state: ResMut<GameState>,
 ) {
     for (pilot, children) in pilot_query.iter() {
-        println!("Pilot {} with {} wins", pilot.name, pilot.wins);
-
         let mut armor: i32 = 0;
         let mut weight: i32 = 0;
         let mut speed: i32 = 0;
@@ -138,9 +142,15 @@ fn round_summary_system(
                 speed += part.value;
             }
         }
-        println!("Armor: {}", armor);
-        println!("Weight: {}", weight);
-        println!("Speed: {}", speed);
+        if (armor == 0) {
+            game_state.round_over = true;
+        }
+        if (game_state.round_over) {
+            println!("Pilot {} with {} wins", pilot.name, pilot.wins);
+            println!("Armor: {}", armor);
+            println!("Weight: {}", weight);
+            println!("Speed: {}", speed);
+        }
     }
 }
 
