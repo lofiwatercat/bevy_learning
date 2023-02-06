@@ -13,6 +13,7 @@ use rand::random;
 #[derive(Component)]
 struct Pilot {
     name: String,
+    current_armor: i32,
     wins: i32,
 }
 
