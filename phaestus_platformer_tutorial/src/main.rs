@@ -54,6 +54,8 @@ struct FrameTime(f32);
 fn animate_sprite(mut query: Query<(&mut TextureAtlasSprite, &SpriteAnimation, &mut FrameTime)>) {
     for (mut sprite, animation, mut frame_time) in query.iter_mut() {
         frame_time.0 += time.delta_seconds();
-        if frame_time.0 > animation.frame_time
+        if (frame_time.0 > animation.frame_time) {
+            let frames = (frame_time.0 / animation.frame_time) as usize;
+        }
     }
 }
