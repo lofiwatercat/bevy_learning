@@ -5,6 +5,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(spawn_cam)
         .add_startup_system(spawn_player)
+        .add_system(animate_sprite)
         .run();
 }
 
@@ -23,8 +24,8 @@ fn spawn_player(
     let atlas = TextureAtlas::from_grid(
         asset_server.load("Main Characters/Mask Dude/Idle (32x32).png"),
         Vec2::splat(32.),
-        1,
         11,
+        1,
         None,
         None,
     );
@@ -39,6 +40,11 @@ fn spawn_player(
             ..Default::default()
         },
         Player,
+        SpriteAnimation {
+            len: 11,
+            frame_time: 1. / 20.,
+        },
+        FrameTime(0.0),
     ));
 }
 
@@ -51,11 +57,19 @@ struct SpriteAnimation {
 #[derive(Component)]
 struct FrameTime(f32);
 
-fn animate_sprite(mut query: Query<(&mut TextureAtlasSprite, &SpriteAnimation, &mut FrameTime)>) {
+fn animate_sprite(
+    mut query: Query<(&mut TextureAtlasSprite, &SpriteAnimation, &mut FrameTime)>,
+    time: Res<Time>,
+) {
     for (mut sprite, animation, mut frame_time) in query.iter_mut() {
         frame_time.0 += time.delta_seconds();
-        if (frame_time.0 > animation.frame_time) {
+        if frame_time.0 > animation.frame_time {
             let frames = (frame_time.0 / animation.frame_time) as usize;
+            sprite.index += frames;
+            if sprite.index >= animation.len {
+                sprite.index %= animation.len;
+            }
+            frame_time.0 -= animation.frame_time * frames as f32;
         }
     }
 }
