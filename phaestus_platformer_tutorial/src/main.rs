@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 
 fn main() {
     App::new()
@@ -87,6 +87,46 @@ fn move_player(
         player.translation.x -= MOVE_SPEED * time.delta_seconds();
     } else if input.any_pressed([KeyCode::D, KeyCode::Right]) {
         player.translation.x += MOVE_SPEED * time.delta_seconds();
+    }
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum Animation {
+    MaskRun,
+    MaskIdle,
+    MaskJump,
+    MaskDoubleJump,
+    MaskFall,
+    Strawberry,
+    NinjaRun,
+    NinjaIdle,
+    NinjaJump,
+    NinjaDoubleJump,
+    NinjaFall,
+    PinkRun,
+    PinkIdle,
+    PinkJump,
+    PinkDoubleJump,
+    PinkFall,
+    GuyRun,
+    GuyIdle,
+    GuyJump,
+    GuyDoubleJump,
+    GuyFall,
+}
+
+#[derive(Resource)]
+struct Animations {
+    map: HashMap<Animation, (Handle<TextureAtlas>, SpriteAnimation)>,
+}
+
+impl FromWorld for Animations {
+    fn from_world(world: &mut World) -> Self {
+        let mut map = Animations {
+            map: HashMap::new(),
+        };
+        let asset_server = world.resource::<AssetServer>();
+        map.add(Animation::MaskIdle)
     }
 }
 
